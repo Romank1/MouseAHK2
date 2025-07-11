@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run AHK",
+            "type": "shell",
+            "windows": {
+                "command": "cmd /c '${workspaceFolder}\\..\\MouseAHK2_scripts\\_MouseAHK_Tools2.ahk'"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+  }
