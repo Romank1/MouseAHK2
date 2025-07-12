@@ -6,7 +6,7 @@ class Socket
 {
 	WM_SOCKET := 0x9987, MSG_PEEK := 2
 	FD_READ := 1, FD_ACCEPT := 8, FD_CLOSE := 32
-	Blocking := True, BlockSleep := 1
+	Blocking := True, BlockSleep := 5
 
 	__New(Socket:=-1)
 	{

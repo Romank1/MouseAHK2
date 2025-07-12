@@ -96,9 +96,13 @@ DenonEthernet_ChangeVolume(Diff)
 	Volume := oldVolume + Diff
 
 	if(Volume < DENON_ETHERNET_MINIMAL_VOLUME)
+	{
 		Volume := DENON_ETHERNET_MINIMAL_VOLUME
+	}
 	else if(Volume > DENON_ETHERNET_MAXIMAL_VOLUME)
+	{
 		Volume := DENON_ETHERNET_MAXIMAL_VOLUME
+	}
 
 	VolumeToSend := Volume
 	if(VolumeToSend < 10)
@@ -122,29 +126,34 @@ DenonEthernet_ChangeVolume(Diff)
 
 DenonEthernet_GetVolume()
 {
+	global FloatVolume
+
 	Res := DenonEthernet_GetBasicStatus(DENON_ETHERNET_GET_STATUS)
 	;MsgBox(Res)
-	NeedleRegEx :="MV(\d+)"
-	;Ungreedy. Makes the quantifiers *+?{} consume only those characters absolutely necessary to form a match, leaving the remaining ones available for the next part of the pattern.
-	;When the "U" option is not in effect, an individual quantifier can be made non-greedy by following it with a question mark.
-	;Conversely, when "U" is in effect, the question mark makes an individual quantifier greedy.
-	FoundPos := RegExMatch(Res, NeedleRegEx, &Match,1)
-	
-	try
-	{
-		volume := Match[1]
-	}
-	catch  
+	volume_prefix   := SubStr(Res, 1, 2) ; Get prefix
+	volume 			:= SubStr(Res, 3, 2) ; Get volume
+	volume_point    := SubStr(Res, 5, 1) ; Get volume point number
+
+	if(volume_prefix != "MV")
 	{
 		return ""
 	}
 
-	if (StrLen(volume) > 2)
+	try
 	{
-		FloatVolume := True
-		volume := SubStr(volume, 1, StrLen(volume) -1)
+		volume := Integer(volume)
 	}
-	else
+	catch 
+	{
+		volume := ""
+	}
+
+	try
+	{
+		res_int := Integer(volume_point)
+		FloatVolume := True
+	}
+	catch  
 	{
 		FloatVolume := False
 	}

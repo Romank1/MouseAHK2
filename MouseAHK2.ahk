@@ -355,52 +355,53 @@ XButton1 & RButton::
 
 ;---------------------------------------------------------- Edge --------------------------------------------------------
 
+get_cUIA(force_allocate:=false)
+{
+    global cUIA
+
+    if(cUIA == 0 || force_allocate == true)
+    {
+        cUIA := UIA_Browser("Edge ahk_class Chrome_WidgetWin_1") ; Initialize UIA_Browser, which also initializes UIA_Interface
+    }
+}
+
 XButton1 & LButton::
 {
     global cUIA
-    static last_count_tab := 0, active_tab := 0
-    
+
     if WinExist("Edge ahk_class Chrome_WidgetWin_1")
     {
-        WinActivate
-        WinWaitActive("Edge ahk_class Chrome_WidgetWin_1")
-        if(cUIA == 0)
-        {
-            cUIA := UIA_Browser("Edge ahk_class Chrome_WidgetWin_1") ; Initialize UIA_Browser, which also initializes UIA_Interface
-        }
+        get_cUIA()
 
-        youtube_tabs := cUIA.GetTabs("youtube", 2, False)
+        is_youtube_active := false
 
-        if(youtube_tabs.Length < 1)
+        if not WinActive("Edge ahk_class Chrome_WidgetWin_1")
         {
-            return
-        }
+            WinActivate
+            WinWaitActive("Edge ahk_class Chrome_WidgetWin_1")
 
-        if(last_count_tab != youtube_tabs.Length)
-        {
-            if (youtube_tabs.Length > 0)
+            CurrentURL := cUIA.GetCurrentURL(fromAddressBar:=False)
+            if InStr(CurrentURL, "www.youtube.com") != 0
             {
-                active_tab := 0
+                is_youtube_active := true
+            }
+        }
+
+        if(is_youtube_active == false)
+        {
+            selectedTab := find_youtube() 
+            
+            if(selectedTab != "")
+            {
+                cUIA.SelectTab(selectedTab, 2, False)
             }
             else
             {
-                active_tab := 0
-                last_count_tab := youtube_tabs.Length
-                return
+                cUIA.NewTab() 
+                cUIA.WaitTitleChange(targetTitle:="", timeOut:=300)
+                cUIA.SetURL("www.youtube.com", navigateToNewUrl := true)
             }
         }
-
-        active_tab := active_tab + 1
-        active_tab := Mod(active_tab, youtube_tabs.Length + 1)
-
-        if(active_tab < 1)
-        {
-            active_tab := 1
-        }
-        
-        last_count_tab := youtube_tabs.Length
-
-        cUIA.SelectTab(youtube_tabs[active_tab].name, 2, False)
     }
     return
 }
@@ -426,10 +427,50 @@ XButton1 Up::
         {
             Run "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
             WinWaitActive("Edge ahk_class Chrome_WidgetWin_1")
-		    cUIA := UIA_Browser("Edge ahk_class Chrome_WidgetWin_1") ; Initialize UIA_Browser, which also initializes UIA_Interface
+            get_cUIA(force_allocate:=true)
         }            
     }
     return
+}
+
+find_youtube()
+{
+    global cUIA
+
+    static last_count_tab := 0, active_tab := 0
+
+    youtube_tabs := cUIA.GetTabs("youtube", 2, False)
+
+    if(youtube_tabs.Length < 1)
+    {
+        return ""
+    }
+
+    if(last_count_tab != youtube_tabs.Length)
+    {
+        if (youtube_tabs.Length > 0)
+        {
+            active_tab := 0
+        }
+        else
+        {
+            active_tab := 0
+            last_count_tab := youtube_tabs.Length
+            return ""
+        }
+    }
+
+    active_tab := active_tab + 1
+    active_tab := Mod(active_tab, youtube_tabs.Length + 1)
+
+    if(active_tab < 1)
+    {
+        active_tab := 1
+    }
+    
+    last_count_tab := youtube_tabs.Length
+
+    return youtube_tabs[active_tab].name
 }
 ;---------------------------------------------------------- Edge --------------------------------------------------------
 
